@@ -1,355 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gold Battle Ribbons</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background-size: cover;
-      background-position: center;
-    }
-    .center-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-    }
-    h1 {
-      font-size: 48px;
-      color: white;
-      text-align: center;
-      text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
-      margin: 0;
-    }
-    .progress-container {
-      margin-top: 10px;
-      display: flex;
-      justify-content: center;
-    }
-    .progress-bar {
-      position: relative;
-      height: 25px;
-      background-color: transparent;
-      border: 2px solid black;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      position: absolute;
-      top: 0; left: 0; height: 100%;
-      background: #008000;
-      text-align: center; line-height: 25px;
-      color: white; font-weight: bold;
-      transition: width 200ms ease;
-      will-change: width;
-    }
-    .button-row { display: flex; gap: 10px; margin-top: 10px; }
-    .grid { display: grid; gap: 10px; margin-top: 20px; justify-content: center; contain: layout paint; }
-    .grid-button {
-      position: relative; background: transparent; padding: 0; border: none; cursor: pointer;
-      border-radius: var(--corner-radius, 10px); overflow: hidden;
-      width: var(--tile-size, 100px); height: var(--tile-size, 100px);
-    }
-    .grid-button img {
-      display: block; width: 100%; height: 100%; object-fit: cover;
-      border-radius: var(--corner-radius, 10px);
-      transition: filter 120ms ease, transform 120ms ease, opacity 120ms ease;
-    }
-    .grid-button.checked img { filter: brightness(60%); }
-    .checkmark {
-      position: absolute; bottom: 0; right: 0; opacity: 0; transition: opacity 120ms ease;
-      pointer-events: none;
-    }
-    .grid-button.checked .checkmark { opacity: 1; }
-    .popup-settings {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: white; padding: 20px; border: 2px solid black; z-index: 100; display: none; max-width: 90vw;
-    }
-    .popup-settings label { font-weight: bold; display: block; margin-top: 10px; }
-    .popup-settings button { margin: 5px; }
-    @media (prefers-reduced-motion: reduce) {
-      .progress-fill, .grid-button img, .checkmark { transition: none !important; }
-    }
-  </style>
-</head>
-<body>
-  <div class="center-container">
-    <h1>Gold Battle Ribbons</h1>
-    <div class="progress-container">
-      <div class="progress-bar" id="progressBar">
-        <div class="progress-fill" id="progressFill">0 / 0</div>
-      </div>
-    </div>
-    <div class="button-row" id="buttonRow">
-      <button id="settingsButton">Settings</button>
-    </div>
-    <div id="grid" class="grid" aria-live="polite"></div>
-  </div>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Gold Battle Ribbons</title><style>
+body{margin:0;font-family:sans-serif;background-size:cover;background-position:center}
+.center-container{display:flex;flex-direction:column;align-items:center;padding:20px}
+h1{font-size:48px;color:#fff;text-align:center;text-shadow:-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000;margin:0}
+.progress-container{margin-top:10px;display:flex;justify-content:center}
+.progress-bar{position:relative;height:25px;background:transparent;border:2px solid #000;border-radius:10px;overflow:hidden}
+.progress-fill{position:absolute;top:0;left:0;height:100%;background:#008000;text-align:center;line-height:25px;color:#fff;font-weight:bold;transition:width .2s ease;will-change:width}
+.button-row{display:flex;gap:10px;margin-top:10px}
+.grid{display:grid;gap:10px;margin-top:20px;justify-content:center;contain:layout paint}
+.grid-button{position:relative;background:transparent;padding:0;border:none;cursor:pointer;border-radius:var(--corner-radius,10px);overflow:hidden;width:var(--tile-size,100px);height:var(--tile-size,100px)}
+.grid-button img{display:block;width:100%;height:100%;object-fit:cover;border-radius:var(--corner-radius,10px);transition:filter .12s ease,opacity .12s ease}
+.grid-button.checked img{filter:brightness(60%)}
+.checkmark{position:absolute;bottom:0;right:0;opacity:0;transition:opacity .12s ease;pointer-events:none}
+.grid-button.checked .checkmark{opacity:1}
+.popup-settings{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:20px;border:2px solid #000;z-index:100;display:none;max-width:90vw}
+.popup-settings label{font-weight:bold;display:block;margin-top:10px}
+.popup-settings button{margin:5px}
+@media(prefers-reduced-motion:reduce){.progress-fill,.grid-button img,.checkmark{transition:none!important}}
+</style></head><body>
+<div class="center-container"><h1>Gold Battle Ribbons</h1>
+<div class="progress-container"><div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill">0 / 0</div></div></div>
+<div class="button-row" id="buttonRow"><button id="screenshotBtn">Screenshot</button><button id="settingsButton">Settings</button></div>
+<div id="grid" class="grid" aria-live="polite"></div></div>
 
-  <div class="popup-settings" id="settingsPopup">
-    <button id="reloadDefaultsBtn">Set to Default Setting</button>
-    <button id="hideButtonsBtn">Hide Buttons (30s)</button>
-    <label>Image Size:</label>
-    <button onclick="changeSetting('size', -10)">&lt;</button>
-    <span id="sizeValue"></span>
-    <button onclick="changeSetting('size', 10)">&gt;</button>
-    <label>Rows:</label>
-    <button onclick="changeSetting('rows', -1)">&lt;</button>
-    <span id="rowsValue"></span>
-    <button onclick="changeSetting('rows', 1)">&gt;</button>
-    <label>Cols:</label>
-    <button onclick="changeSetting('cols', -1)">&lt;</button>
-    <span id="colsValue"></span>
-    <button onclick="changeSetting('cols', 1)">&gt;</button>
-    <label>Corner Radius:</label>
-    <button onclick="changeSetting('corner', -2)">&lt;</button>
-    <span id="cornerValue"></span>
-    <button onclick="changeSetting('corner', 2)">&gt;</button>
-    <label>Background:</label>
-    <input type="radio" name="bgmode" value="select" onchange="setBGMode('select')"> Select
-    <input type="radio" name="bgmode" value="custom" onchange="setBGMode('custom')"> Custom
-    <br>
-    <div id="bgSelect">
-      <button onclick="changeBG(-1)">&lt;</button>
-      <span id="bgName"></span>
-      <button onclick="changeBG(1)">&gt;</button>
-    </div>
-    <div id="bgCustom" style="display:none">
-      <input type="file" accept="image/*" onchange="uploadBG(event)">
-    </div>
-    <hr>
-    <button id="resetChecklistBtn">Reset Checklist</button>
-    <button onclick="closeSettings()">Close</button>
-  </div>
+<div class="popup-settings" id="settingsPopup">
+<button id="reloadDefaultsBtn">Set to Default Setting</button><button id="hideButtonsBtn">Hide Buttons (30s)</button>
+<label>Image Size:</label><button onclick="changeSetting('size',-10)">&lt;</button><span id="sizeValue"></span><button onclick="changeSetting('size',10)">&gt;</button>
+<label>Rows:</label><button onclick="changeSetting('rows',-1)">&lt;</button><span id="rowsValue"></span><button onclick="changeSetting('rows',1)">&gt;</button>
+<label>Cols:</label><button onclick="changeSetting('cols',-1)">&lt;</button><span id="colsValue"></span><button onclick="changeSetting('cols',1)">&gt;</button>
+<label>Corner Radius:</label><button onclick="changeSetting('corner',-2)">&lt;</button><span id="cornerValue"></span><button onclick="changeSetting('corner',2)">&gt;</button>
+<label>Background:</label><input type="radio" name="bgmode" value="select" onchange="setBGMode('select')"> Select <input type="radio" name="bgmode" value="custom" onchange="setBGMode('custom')"> Custom
+<div id="bgSelect"><button onclick="changeBG(-1)">&lt;</button><span id="bgName"></span><button onclick="changeBG(1)">&gt;</button></div>
+<div id="bgCustom" style="display:none"><input type="file" accept="image/*" onchange="uploadBG(event)"></div>
+<hr><button id="resetChecklistBtn">Reset Checklist</button><button onclick="closeSettings()">Close</button></div>
 
-  <script>
-    const FALLBACK_DEFAULTS = { size: 100, rows: 5, cols: 5, corner: 10, bgMode: 'select', bgIndex: 0 };
-    let DEFAULTS = { ...FALLBACK_DEFAULTS };
-    let gridData = JSON.parse(localStorage.getItem("checklist") || "[]");
-    let settings = JSON.parse(localStorage.getItem("settings") || "{}");
-    const backgrounds = ["1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png"];
-    let currentBG = 0, bgMode = 'select';
-    let tiles = [];
-    let totalValid = 0;
-    let rafProgress = null;
-
-    function $(id) { return document.getElementById(id); }
-
-    function parseDefaultsText(txt) {
-      const out = {};
-      txt.split(/\r?\n/).forEach(line => {
-        const clean = line.trim();
-        if (!clean || clean.startsWith('#') || clean.startsWith('//')) return;
-        const eq = clean.indexOf('=');
-        if (eq === -1) return;
-        const key = clean.slice(0, eq).trim();
-        const val = clean.slice(eq + 1).trim();
-        out[key] = val;
-      });
-      return out;
-    }
-
-    async function loadDefaultsFromFile() {
-      try {
-        const res = await fetch('default.txt', { cache: 'no-store' });
-        if (!res.ok) throw new Error('default.txt not found');
-        const parsed = parseDefaultsText(await res.text());
-        const def = { ...FALLBACK_DEFAULTS };
-        if (!isNaN(+parsed.size)) def.size = Math.max(1, +parsed.size);
-        if (!isNaN(+parsed.rows)) def.rows = Math.max(1, +parsed.rows);
-        if (!isNaN(+parsed.cols)) def.cols = Math.max(1, +parsed.cols);
-        if (!isNaN(+parsed.corner)) def.corner = Math.max(0, +parsed.corner);
-        const m = (parsed.bgMode || '').toLowerCase();
-        def.bgMode = (m === 'custom' || m === 'select') ? m : FALLBACK_DEFAULTS.bgMode;
-        const idx = parseInt(parsed.bgIndex, 10);
-        def.bgIndex = Number.isInteger(idx) ? Math.max(0, idx) : FALLBACK_DEFAULTS.bgIndex;
-        DEFAULTS = def;
-      } catch { DEFAULTS = { ...FALLBACK_DEFAULTS }; }
-    }
-
-    function seedAndNormalizeSettings() {
-      const saved = JSON.parse(localStorage.getItem("settings") || "{}");
-      settings = { ...DEFAULTS, ...saved };
-      settings.size = Math.max(1, Number(settings.size) || DEFAULTS.size);
-      settings.rows = Math.max(1, Number(settings.rows) || DEFAULTS.rows);
-      settings.cols = Math.max(1, Number(settings.cols) || DEFAULTS.cols);
-      settings.corner = Math.max(0, Number(settings.corner) || DEFAULTS.corner);
-      settings.bgMode = (settings.bgMode === 'custom' || settings.bgMode === 'select') ? settings.bgMode : DEFAULTS.bgMode;
-      settings.bgIndex = Number.isInteger(+settings.bgIndex) ? +settings.bgIndex : DEFAULTS.bgIndex;
-      currentBG = settings.bgIndex; bgMode = settings.bgMode;
-      localStorage.setItem("settings", JSON.stringify(settings));
-      updateSettingsUI();
-      document.documentElement.style.setProperty('--corner-radius', settings.corner + 'px');
-      document.documentElement.style.setProperty('--tile-size', settings.size + 'px');
-    }
-
-    function updateSettingsUI() {
-      $("sizeValue").innerText = settings.size;
-      $("rowsValue").innerText = settings.rows;
-      $("colsValue").innerText = settings.cols;
-      $("cornerValue").innerText = settings.corner;
-      $("bgName").innerText = backgrounds[currentBG] ?? '(none)';
-      const selectRadio = document.querySelector('input[name="bgmode"][value="select"]');
-      const customRadio = document.querySelector('input[name="bgmode"][value="custom"]');
-      if (selectRadio && customRadio) { selectRadio.checked = (bgMode === 'select'); customRadio.checked = (bgMode === 'custom'); }
-      $("bgSelect").style.display = bgMode === 'select' ? 'block' : 'none';
-      $("bgCustom").style.display = bgMode === 'custom' ? 'block' : 'none';
-    }
-
-    function changeSetting(key, delta) {
-      const clamp = (k, v) => (k === 'corner' ? Math.max(0, v) : Math.max(1, v));
-      settings[key] = clamp(key, Number(settings[key] || 0) + delta);
-      if (key === 'corner') document.documentElement.style.setProperty('--corner-radius', settings.corner + 'px');
-      if (key === 'size') document.documentElement.style.setProperty('--tile-size', settings.size + 'px');
-      localStorage.setItem("settings", JSON.stringify(settings));
-      updateSettingsUI();
-      if (key === 'size' || key === 'rows' || key === 'cols') buildGrid();
-    }
-
-    function setBGMode(mode) {
-      bgMode = mode; settings.bgMode = mode;
-      if (mode === 'select' && (currentBG < 0 || currentBG >= backgrounds.length)) { currentBG = 0; settings.bgIndex = 0; }
-      localStorage.setItem("settings", JSON.stringify(settings));
-      updateSettingsUI(); applyBackground();
-    }
-
-    function changeBG(step) {
-      currentBG += step;
-      if (currentBG >= backgrounds.length || !backgrounds[currentBG]) currentBG = 0;
-      if (currentBG < 0) currentBG = backgrounds.length - 1;
-      settings.bgIndex = currentBG;
-      localStorage.setItem("settings", JSON.stringify(settings));
-      updateSettingsUI(); applyBackground();
-    }
-
-    function uploadBG(event) {
-      const file = event.target.files[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => document.body.style.backgroundImage = `url('${e.target.result}')`;
-      reader.readAsDataURL(file);
-    }
-
-    function applyBackground() {
-      if (bgMode === 'select') document.body.style.backgroundImage = `url('background/${backgrounds[currentBG]}')`;
-    }
-
-    function buildGrid() {
-      const grid = $("grid");
-      tiles = [];
-      totalValid = 0;
-      grid.style.gridTemplateColumns = `repeat(${settings.cols}, var(--tile-size))`;
-      $("progressBar").style.width = (settings.size + 10) * settings.cols + "px";
-      const frag = document.createDocumentFragment();
-      const count = settings.rows * settings.cols;
-      for (let i = 0; i < count; i++) {
-        const btn = document.createElement("button");
-        btn.className = "grid-button";
-        btn.setAttribute("aria-pressed", gridData.includes(i) ? "true" : "false");
-        const img = document.createElement("img");
-        img.loading = "lazy";
-        img.decoding = "async";
-        img.style.opacity = "0";
-        const checkImg = document.createElement("img");
-        checkImg.src = "check.png";
-        const size = Math.ceil(settings.size * 0.5);
-        checkImg.className = "checkmark";
-        checkImg.style.width = size + "px";
-        checkImg.style.height = size + "px";
-        const index = i;
-        const path = `images/${index + 1}.png`;
-        img.src = path;
-        img.onload = () => {
-          if (!btn.dataset.loaded) { totalValid++; btn.dataset.loaded = "1"; }
-          img.style.opacity = "1";
-          scheduleProgressUpdate();
-        };
-        img.onerror = () => { btn.style.display = "none"; scheduleProgressUpdate(); };
-        if (gridData.includes(index)) btn.classList.add("checked");
-        btn.onclick = () => toggleTile(index);
-        btn.appendChild(img);
-        btn.appendChild(checkImg);
-        tiles.push({ btn, img, checkImg, index });
-        frag.appendChild(btn);
-      }
-      grid.replaceChildren(frag);
-      scheduleProgressUpdate(true);
-    }
-
-    function toggleTile(index) {
-      const t = tiles[index];
-      if (!t) return;
-      const pos = gridData.indexOf(index);
-      if (pos > -1) gridData.splice(pos, 1); else gridData.push(index);
-      localStorage.setItem("checklist", JSON.stringify(gridData));
-      const checked = gridData.includes(index);
-      t.btn.classList.toggle("checked", checked);
-      t.btn.setAttribute("aria-pressed", checked ? "true" : "false");
-      scheduleProgressUpdate();
-    }
-
-    function scheduleProgressUpdate(force = false) {
-      if (rafProgress && !force) return;
-      rafProgress = requestAnimationFrame(() => {
-        updateProgress(totalValid);
-        rafProgress = null;
-      });
-    }
-
-    function updateProgress(total) {
-      const current = gridData.length;
-      const percent = total === 0 ? 0 : Math.round((current / total) * 100);
-      const fill = $("progressFill");
-      fill.style.width = percent + "%";
-      fill.textContent = `${current} / ${total}`;
-    }
-
-    function resetChecklist() {
-      if (!confirm("Reset all checked items?")) return;
-      localStorage.removeItem("checklist");
-      gridData = [];
-      for (const t of tiles) {
-        t.btn.classList.remove("checked");
-        t.btn.setAttribute("aria-pressed", "false");
-      }
-      scheduleProgressUpdate(true);
-    }
-
-    function hideButtonsFor(durationMs = 30000) {
-      const row = $("buttonRow");
-      $("settingsPopup").style.display = "none";
-      row.style.display = "none";
-      setTimeout(() => { row.style.display = "flex"; }, durationMs);
-    }
-
-    function toggleSettings() {
-      const popup = $("settingsPopup");
-      popup.style.display = popup.style.display === "none" ? "block" : "none";
-    }
-    function closeSettings() { $("settingsPopup").style.display = "none"; }
-
-    async function init() {
-      await loadDefaultsFromFile();
-      seedAndNormalizeSettings();
-      applyBackground();
-      buildGrid();
-    }
-
-    $("settingsButton").onclick = toggleSettings;
-    $("resetChecklistBtn").onclick = resetChecklist;
-    $("hideButtonsBtn").onclick = () => hideButtonsFor(30000);
-    $("reloadDefaultsBtn").onclick = () => {
-      settings = { ...DEFAULTS };
-      localStorage.setItem("settings", JSON.stringify(settings));
-      currentBG = settings.bgIndex; bgMode = settings.bgMode;
-      document.documentElement.style.setProperty('--corner-radius', settings.corner + 'px');
-      document.documentElement.style.setProperty('--tile-size', settings.size + 'px');
-      updateSettingsUI(); applyBackground(); buildGrid();
-    };
-
-    init();
-  </script>
-</body>
-</html>
+<script>
+const FALLBACK_DEFAULTS={size:100,rows:5,cols:5,corner:10,bgMode:'select',bgIndex:0};let DEFAULTS={...FALLBACK_DEFAULTS};let gridData=JSON.parse(localStorage.getItem("checklist")||"[]");let settings=JSON.parse(localStorage.getItem("settings")||"{}");const backgrounds=["1.png","2.png","3.png","4.png","5.png","6.png","7.png"];let currentBG=0,bgMode='select';let tiles=[],totalValid=0,rafProgress=null;
+function $(id){return document.getElementById(id)}
+function parseDefaultsText(t){const o={};t.split(/\r?\n/).forEach(l=>{const c=l.trim();if(!c||c.startsWith('#')||c.startsWith('//'))return;const e=c.indexOf('=');if(e==-1)return;const k=c.slice(0,e).trim();const v=c.slice(e+1).trim();o[k]=v});return o}
+async function loadDefaultsFromFile(){try{const r=await fetch('default.txt',{cache:'no-store'});if(!r.ok)throw 0;const p=parseDefaultsText(await r.text()),d={...FALLBACK_DEFAULTS};if(!isNaN(+p.size))d.size=Math.max(1,+p.size);if(!isNaN(+p.rows))d.rows=Math.max(1,+p.rows);if(!isNaN(+p.cols))d.cols=Math.max(1,+p.cols);if(!isNaN(+p.corner))d.corner=Math.max(0,+p.corner);const m=(p.bgMode||'').toLowerCase();d.bgMode=(m==='custom'||m==='select')?m:FALLBACK_DEFAULTS.bgMode;const i=parseInt(p.bgIndex,10);d.bgIndex=Number.isInteger(i)?Math.max(0,i):FALLBACK_DEFAULTS.bgIndex;DEFAULTS=d}catch{DEFAULTS={...FALLBACK_DEFAULTS}}}
+function seedAndNormalizeSettings(){const s=JSON.parse(localStorage.getItem("settings")||"{}");settings={...DEFAULTS,...s};settings.size=Math.max(1,Number(settings.size)||DEFAULTS.size);settings.rows=Math.max(1,Number(settings.rows)||DEFAULTS.rows);settings.cols=Math.max(1,Number(settings.cols)||DEFAULTS.cols);settings.corner=Math.max(0,Number(settings.corner)||DEFAULTS.corner);settings.bgMode=(settings.bgMode==='custom'||settings.bgMode==='select')?settings.bgMode:DEFAULTS.bgMode;settings.bgIndex=Number.isInteger(+settings.bgIndex)?+settings.bgIndex:DEFAULTS.bgIndex;currentBG=settings.bgIndex;bgMode=settings.bgMode;localStorage.setItem("settings",JSON.stringify(settings));updateSettingsUI();document.documentElement.style.setProperty('--corner-radius',settings.corner+'px');document.documentElement.style.setProperty('--tile-size',settings.size+'px')}
+function updateSettingsUI(){$("sizeValue").innerText=settings.size;$("rowsValue").innerText=settings.rows;$("colsValue").innerText=settings.cols;$("cornerValue").innerText=settings.corner;$("bgName").innerText=backgrounds[currentBG]??'(none)';const s=document.querySelector('input[name="bgmode"][value="select"]'),c=document.querySelector('input[name="bgmode"][value="custom"]');if(s&&c){s.checked=(bgMode==='select');c.checked=(bgMode==='custom')}$("bgSelect").style.display=bgMode==='select'?'block':'none';$("bgCustom").style.display=bgMode==='custom'?'block':'none'}
+function changeSetting(k,d){const c=(k,v)=>(k==='corner'?Math.max(0,v):Math.max(1,v));settings[k]=c(k,Number(settings[k]||0)+d);if(k==='corner')document.documentElement.style.setProperty('--corner-radius',settings.corner+'px');if(k==='size')document.documentElement.style.setProperty('--tile-size',settings.size+'px');localStorage.setItem("settings",JSON.stringify(settings));updateSettingsUI();if(k==='size'||k==='rows'||k==='cols')buildGrid()}
+function setBGMode(m){bgMode=m;settings.bgMode=m;if(m==='select'&&(currentBG<0||currentBG>=backgrounds.length)){currentBG=0;settings.bgIndex=0}localStorage.setItem("settings",JSON.stringify(settings));updateSettingsUI();applyBackground()}
+function changeBG(s){currentBG+=s;if(currentBG>=backgrounds.length||!backgrounds[currentBG])currentBG=0;if(currentBG<0)currentBG=backgrounds.length-1;settings.bgIndex=currentBG;localStorage.setItem("settings",JSON.stringify(settings));updateSettingsUI();applyBackground()}
+function uploadBG(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=x=>document.body.style.backgroundImage=`url('${x.target.result}')`;r.readAsDataURL(f)}
+function applyBackground(){if(bgMode==='select')document.body.style.backgroundImage=`url('background/${backgrounds[currentBG]}')`}
+function buildGrid(){const g=$("grid");tiles=[];totalValid=0;g.style.gridTemplateColumns=`repeat(${settings.cols},var(--tile-size))`;$("progressBar").style.width=(settings.size+10)*settings.cols+"px";const f=document.createDocumentFragment(),n=settings.rows*settings.cols;for(let i=0;i<n;i++){const b=document.createElement("button");b.className="grid-button";b.setAttribute("aria-pressed",gridData.includes(i)?"true":"false");const img=document.createElement("img");img.loading="lazy";img.decoding="async";img.style.opacity="0";const c=document.createElement("img");c.src="check.png";const sz=Math.ceil(settings.size*.5);c.className="checkmark";c.style.width=sz+"px";c.style.height=sz+"px";const idx=i,path=`images/${idx+1}.png`;img.src=path;img.onload=()=>{if(!b.dataset.loaded){totalValid++;b.dataset.loaded="1"}img.style.opacity="1";scheduleProgressUpdate()};img.onerror=()=>{b.style.display="none";scheduleProgressUpdate()};if(gridData.includes(idx))b.classList.add("checked");b.onclick=()=>toggleTile(idx);b.appendChild(img);b.appendChild(c);tiles.push({btn:b,img,c,index:idx});f.appendChild(b)}g.replaceChildren(f);scheduleProgressUpdate(true)}
+function toggleTile(i){const t=tiles[i];if(!t)return;const p=gridData.indexOf(i);if(p>-1)gridData.splice(p,1);else gridData.push(i);localStorage.setItem("checklist",JSON.stringify(gridData));const chk=gridData.includes(i);t.btn.classList.toggle("checked",chk);t.btn.setAttribute("aria-pressed",chk?"true":"false");scheduleProgressUpdate()}
+function scheduleProgressUpdate(f=false){if(rafProgress&&!f)return;rafProgress=requestAnimationFrame(()=>{updateProgress(totalValid);rafProgress=null})}
+function updateProgress(t){const c=gridData.length,p=t===0?0:Math.round(c/t*100),fill=$("progressFill");fill.style.width=p+"%";fill.textContent=`${c} / ${t}`}
+function resetChecklist(){if(!confirm("Reset all checked items?"))return;localStorage.removeItem("checklist");gridData=[];for(const t of tiles){t.btn.classList.remove("checked");t.btn.setAttribute("aria-pressed","false")}scheduleProgressUpdate(true)}
+function hideButtonsFor(d=3e4){const r=$("buttonRow");$("settingsPopup").style.display="none";r.style.display="none";setTimeout(()=>{r.style.display="flex"},d)}
+function toggleSettings(){const p=$("settingsPopup");p.style.display=p.style.display==="none"?"block":"none"}
+function closeSettings(){$("settingsPopup").style.display="none"}
+async function captureScreen(){try{const s=await navigator.mediaDevices.getDisplayMedia({video:{displaySurface:'monitor'},audio:false});const t=s.getVideoTracks()[0],v=document.createElement('video');v.srcObject=s;await v.play();await new Promise(r=>setTimeout(r,100));const set=t.getSettings?t.getSettings():{},w=set.width||v.videoWidth,h=set.height||v.videoHeight,cv=document.createElement('canvas');cv.width=w;cv.height=h;const ctx=cv.getContext('2d');ctx.drawImage(v,0,0,w,h);t.stop();v.srcObject=null;cv.toBlob(b=>{const a=document.createElement('a'),url=URL.createObjectURL(b),ts=new Date().toISOString().replace(/[:.]/g,'-');a.href=url;a.download=`screenshot_${ts}.png`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)},'image/png')}catch{alert('Screenshot cancelled or not allowed.')}}
+async function init(){await loadDefaultsFromFile();seedAndNormalizeSettings();applyBackground();buildGrid()}
+$("settingsButton").onclick=toggleSettings;$("resetChecklistBtn").onclick=resetChecklist;$("hideButtonsBtn").onclick=()=>hideButtonsFor(3e4);$("reloadDefaultsBtn").onclick=()=>{settings={...DEFAULTS};localStorage.setItem("settings",JSON.stringify(settings));currentBG=settings.bgIndex;bgMode=settings.bgMode;document.documentElement.style.setProperty('--corner-radius',settings.corner+'px');document.documentElement.style.setProperty('--tile-size',settings.size+'px');updateSettingsUI();applyBackground();buildGrid()};$("screenshotBtn").onclick=captureScreen;init();
+</script></body></html>
