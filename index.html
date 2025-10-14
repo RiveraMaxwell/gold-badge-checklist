@@ -1,149 +1,67 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Gold Battle Ribbons</title><script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script><style>
-body{margin:0;font-family:sans-serif;background-size:cover;background-position:center}
+:root{--popup-bg:#fff;--popup-fg:#111;--btn-bg:#f4f4f4;--btn-fg:#111;--btn-bd:#000;--popup-bd:#000}
+@media(prefers-color-scheme:dark){:root{--popup-bg:#111;--popup-fg:#eee;--btn-bg:#1c1c1c;--btn-fg:#eee;--btn-bd:#444;--popup-bd:#555}}
+body{margin:0;font-family:sans-serif;background-size:cover;background-position:center;color:#fff}
 .center-container{display:flex;flex-direction:column;align-items:center;padding:20px}
 h1{font-size:48px;color:#fff;text-align:center;text-shadow:-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000;margin:0}
 .progress-container{margin-top:10px;display:flex;justify-content:center}
 .progress-bar{position:relative;height:25px;background:transparent;border:2px solid #000;border-radius:10px;overflow:hidden}
-.progress-fill{position:absolute;top:0;left:0;height:100%;background:#008000;text-align:center;line-height:25px;color:#fff;font-weight:bold;transition:width .2s ease;will-change:width}
-.button-row{display:flex;gap:10px;margin-top:10px}
-.grid{display:grid;gap:var(--grid-gap,10px);margin-top:20px;justify-content:center;contain:layout paint}
-.grid-button{position:relative;background:transparent;padding:0;border:none;cursor:pointer;border-radius:var(--corner-radius,10px);overflow:hidden;width:var(--tile-size,100px);height:var(--tile-size,100px)}
-.grid-button img{display:block;width:100%;height:100%;object-fit:cover;border-radius:var(--corner-radius,10px);transition:filter .12s ease,opacity .12s ease}
+.progress-fill{position:absolute;top:0;left:0;height:100%;background:#008000;text-align:center;line-height:25px;color:#fff;font-weight:bold;transition:width .2s ease}
+.button-row{display:flex;gap:8px;margin-top:10px}
+.grid{display:grid;gap:var(--grid-gap,8px);margin-top:20px;justify-content:center;contain:layout paint}
+.grid-button{position:relative;background:transparent;padding:0;border:none;cursor:pointer;border-radius:var(--corner-radius,8px);overflow:hidden;width:var(--tile-size,100px);height:var(--tile-size,100px)}
+.grid-button img{display:block;width:100%;height:100%;object-fit:cover;border-radius:var(--corner-radius,8px);transition:filter .1s ease,opacity .1s ease}
 .grid-button.checked img{filter:brightness(60%)}
-.checkmark{position:absolute;bottom:0;right:0;opacity:0;transition:opacity .12s ease;pointer-events:none}
+.checkmark{position:absolute;bottom:0;right:0;opacity:0;transition:opacity .1s ease;pointer-events:none}
 .grid-button.checked .checkmark{opacity:1}
-.popup-settings{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:20px;border:2px solid #000;z-index:100;display:none;max-width:90vw;text-align:center}
-.popup-settings .size-controls button{margin:0}
-.popup-settings label{font-weight:bold;display:block;margin-top:10px}
-.popup-settings .value-line{margin-top:4px}
-.popup-settings button{margin:5px}
+.popup-settings{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--popup-bg);color:var(--popup-fg);padding:10px 12px;border:2px solid var(--popup-bd);border-radius:6px;z-index:100;display:none;max-width:95vw;text-align:left;font-size:12px;line-height:1.2em}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:4px;margin:2px 0}
+.setting-row label{font-weight:bold;margin:0;white-space:nowrap;color:var(--popup-fg)}
+.setting-row span{min-width:24px;text-align:center;color:var(--popup-fg)}
+.popup-settings button{font-size:11px;padding:2px 5px;margin:0;border:1px solid var(--btn-bd);border-radius:3px;cursor:pointer;background:var(--btn-bg);color:var(--btn-fg)}
+.popup-settings input[type="radio"]{margin-right:3px;transform:scale(.9)}
+.popup-settings hr{margin:6px 0;border:none;border-top:1px solid var(--popup-bd);opacity:.5}
+.popup-settings .section-title{font-weight:bold;margin-top:6px;margin-bottom:3px;text-align:center;color:var(--popup-fg)}
 @media(prefers-reduced-motion:reduce){.progress-fill,.grid-button img,.checkmark{transition:none!important}}
 </style></head><body>
-<div class="center-container"><h1>Gold Battle Ribbons</h1>
-<div class="progress-container"><div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill">0 / 0</div></div></div>
-<div class="button-row"><button id="screenshotBtn">Screenshot</button><button id="settingsButton">Settings</button></div>
-<div id="grid" class="grid"></div></div>
-
+<div class="center-container"><h1>Gold Battle Ribbons</h1><div class="progress-container"><div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill">0 / 0</div></div></div><div class="button-row"><button id="screenshotBtn">Screenshot</button><button id="settingsButton">Settings</button></div><div id="grid" class="grid"></div></div>
 <div class="popup-settings" id="settingsPopup">
-<label>Device:</label>
-<div class="value-line"><label><input type="radio" name="device" id="devicePC" onchange="onDeviceChange('pc')"> PC</label></div>
-<div class="value-line"><label><input type="radio" name="device" id="devicePhone" onchange="onDeviceChange('phone')"> Phone</label></div>
-
-<button id="reloadDefaultsBtn">Set to Default Setting</button>
-
-<label>Image Size: <span id="sizeValue"></span></label>
-<div class="value-line size-controls">
-  <button onclick="changeSetting('size',-10)">-10</button><button onclick="changeSetting('size',-5)">-5</button><button onclick="changeSetting('size',-1)">-1</button>
-  <button onclick="changeSetting('size',1)">+1</button><button onclick="changeSetting('size',5)">+5</button><button onclick="changeSetting('size',10)">+10</button>
+<div class="section-title">Device</div>
+<div class="setting-row"><label><input type="radio" name="device" id="devicePC" onchange="onDeviceChange('pc')">PC</label><label><input type="radio" name="device" id="devicePhone" onchange="onDeviceChange('phone')">Phone</label></div>
+<div class="setting-row"><button id="reloadDefaultsBtn" style="width:100%">Set to Default Setting</button></div>
+<div class="section-title">Layout</div>
+<div class="setting-row"><label>Image:</label><span id="sizeValue"></span><div><button onclick="changeSetting('size',-10)">-10</button><button onclick="changeSetting('size',-1)">-1</button><button onclick="changeSetting('size',1)">+1</button><button onclick="changeSetting('size',10)">+10</button></div></div>
+<div class="setting-row"><label>Gap:</label><span id="gapValue"></span><div><button onclick="changeSetting('gap',-1)">&lt;</button><button onclick="changeSetting('gap',1)">&gt;</button></div></div>
+<div class="setting-row"><label>Rows:</label><span id="rowsValue"></span><div><button onclick="changeSetting('rows',-1)">&lt;</button><button onclick="changeSetting('rows',1)">&gt;</button></div></div>
+<div class="setting-row"><label>Cols:</label><span id="colsValue"></span><div><button onclick="changeSetting('cols',-1)">&lt;</button><button onclick="changeSetting('cols',1)">&gt;</button></div></div>
+<div class="setting-row"><label>Corner:</label><span id="cornerValue"></span><div><button onclick="changeSetting('corner',-2)">&lt;</button><button onclick="changeSetting('corner',2)">&gt;</button></div></div>
+<div class="section-title">Background</div>
+<div class="setting-row"><label><input type="radio" name="bgmode" value="select" onchange="setBGMode('select')">Select</label><label><input type="radio" name="bgmode" value="custom" onchange="setBGMode('custom')">Custom</label></div>
+<div class="setting-row" id="bgSelect"><button onclick="changeBG(-1)">&lt;</button><span id="bgName"></span><button onclick="changeBG(1)">&gt;</button></div>
+<div id="bgCustom" class="setting-row" style="display:none"><input type="file" accept="image/*" onchange="uploadBG(event)"></div>
+<hr><div class="setting-row"><button id="resetChecklistBtn" style="width:100%">Reset Checklist</button></div><div class="setting-row"><button onclick="closeSettings()" style="width:100%">Close</button></div>
 </div>
-
-<label>Grid Gap: <span id="gapValue"></span></label>
-<div class="value-line"><button onclick="changeSetting('gap',-1)">&lt;</button><button onclick="changeSetting('gap',1)">&gt;</button></div>
-
-<label>Rows: <span id="rowsValue"></span></label>
-<div class="value-line"><button onclick="changeSetting('rows',-1)">&lt;</button><button onclick="changeSetting('rows',1)">&gt;</button></div>
-
-<label>Cols: <span id="colsValue"></span></label>
-<div class="value-line"><button onclick="changeSetting('cols',-1)">&lt;</button><button onclick="changeSetting('cols',1)">&gt;</button></div>
-
-<label>Corner Radius: <span id="cornerValue"></span></label>
-<div class="value-line"><button onclick="changeSetting('corner',-2)">&lt;</button><button onclick="changeSetting('corner',2)">&gt;</button></div>
-
-<label>Background:</label>
-<div class="value-line"><label><input type="radio" name="bgmode" value="select" onchange="setBGMode('select')"> Select</label></div>
-<div class="value-line"><label><input type="radio" name="bgmode" value="custom" onchange="setBGMode('custom')"> Custom</label></div>
-<div id="bgSelect"><button onclick="changeBG(-1)">&lt;</button><span id="bgName"></span><button onclick="changeBG(1)">&gt;</button></div>
-<div id="bgCustom" style="display:none"><input type="file" accept="image/*" onchange="uploadBG(event)"></div>
-
-<hr><button id="resetChecklistBtn">Reset Checklist</button><button onclick="closeSettings()">Close</button></div>
-
 <script>
-const DEFAULTS_PC={size:70,gap:10,rows:5,cols:16,corner:12,bgMode:'select',bgIndex:0};
-const DEFAULTS_PHONE={size:50,gap:5,rows:14,cols:6,corner:12,bgMode:'select',bgIndex:0};
-let gridData=JSON.parse(localStorage.getItem("checklist")||"[]");
-let settings=JSON.parse(localStorage.getItem("settings")||"{}");
-let deviceMode=(settings.device||'pc');
-let backgroundBase=deviceMode==='phone'?'background_phone':'background_pc';
-const backgrounds=["1.png","2.png","3.png","4.png","5.png","6.png","7.png"];
-let currentBG=0,bgMode='select',tiles=[],totalValid=0,rafProgress=null;
-
-function $(id){return document.getElementById(id)}
-function getDeviceDefaults(){return deviceMode==='phone'?{...DEFAULTS_PHONE}:{...DEFAULTS_PC}}
-function clampAll(){
-  settings.size=Math.max(1,Number(settings.size)||getDeviceDefaults().size);
-  settings.rows=Math.max(1,Number(settings.rows)||getDeviceDefaults().rows);
-  settings.cols=Math.max(1,Number(settings.cols)||getDeviceDefaults().cols);
-  settings.corner=Math.max(0,Number(settings.corner)||getDeviceDefaults().corner);
-  settings.gap=Math.max(0,Number(settings.gap)||getDeviceDefaults().gap);
-  bgMode=(settings.bgMode==='custom'||settings.bgMode==='select')?settings.bgMode:getDeviceDefaults().bgMode;
-  currentBG=Number.isInteger(+settings.bgIndex)?+settings.bgIndex:getDeviceDefaults().bgIndex;
-}
-function seedSettings(){
-  settings={...getDeviceDefaults(),...settings,device:deviceMode};
-  clampAll();persist();applyVars();updateSettingsUI();updateBar();
-}
-function applyVars(){
-  document.documentElement.style.setProperty('--corner-radius',settings.corner+'px');
-  document.documentElement.style.setProperty('--tile-size',settings.size+'px');
-  document.documentElement.style.setProperty('--grid-gap',settings.gap+'px');
-}
-function persist(){localStorage.setItem("settings",JSON.stringify(settings))}
-function updateSettingsUI(){
-  $("sizeValue").innerText=settings.size;$("gapValue").innerText=settings.gap;$("rowsValue").innerText=settings.rows;$("colsValue").innerText=settings.cols;$("cornerValue").innerText=settings.corner;
-  $("devicePC").checked=(deviceMode==='pc');$("devicePhone").checked=(deviceMode==='phone');
-  const s=document.querySelector('input[name="bgmode"][value="select"]'),c=document.querySelector('input[name="bgmode"][value="custom"]');
-  if(s&&c){s.checked=(bgMode==='select');c.checked=(bgMode==='custom')}
-  $("bgSelect").style.display=bgMode==='select'?'block':'none';$("bgCustom").style.display=bgMode==='custom'?'block':'none';
-  $("bgName").innerText=backgrounds[currentBG]??'(none)';
-}
+const DEFAULTS_PC={size:70,gap:10,rows:5,cols:16,corner:12,bgMode:'select',bgIndex:0},DEFAULTS_PHONE={size:50,gap:6,rows:14,cols:6,corner:8,bgMode:'select',bgIndex:0};let gridData=JSON.parse(localStorage.getItem("checklist")||"[]"),settings=JSON.parse(localStorage.getItem("settings")||"{}"),deviceMode=settings.device||'pc',backgroundBase=deviceMode==='phone'?'background_phone':'background_pc',backgrounds=["1.png","2.png","3.png","4.png","5.png","6.png","7.png"],currentBG=0,bgMode='select',tiles=[],totalValid=0,rafProgress=null;$=id=>document.getElementById(id);const getDeviceDefaults=()=>deviceMode==='phone'?{...DEFAULTS_PHONE}:{...DEFAULTS_PC};function clampAll(){const d=getDeviceDefaults();settings.size=Math.max(1,+settings.size||d.size);settings.rows=Math.max(1,+settings.rows||d.rows);settings.cols=Math.max(1,+settings.cols||d.cols);settings.corner=Math.max(0,+settings.corner||d.corner);settings.gap=Math.max(0,+settings.gap||d.gap);bgMode=(settings.bgMode==='custom'||settings.bgMode==='select')?settings.bgMode:d.bgMode;currentBG=Number.isInteger(+settings.bgIndex)?+settings.bgIndex:d.bgIndex}
+function persist(){localStorage.setItem("settings",JSON.stringify(settings))}function applyVars(){document.documentElement.style.setProperty('--corner-radius',settings.corner+'px');document.documentElement.style.setProperty('--tile-size',settings.size+'px');document.documentElement.style.setProperty('--grid-gap',settings.gap+'px')}
 function updateBar(){$("progressBar").style.width=(settings.cols*settings.size+(settings.cols-1)*settings.gap)+"px"}
-function changeSetting(k,d){
-  const clamp=(k,v)=>k==='corner'?Math.max(0,v):k==='gap'?Math.max(0,v):Math.max(1,v);
-  settings[k]=clamp(k,Number(settings[k]||0)+d);persist();if(k==='corner')document.documentElement.style.setProperty('--corner-radius',settings.corner+'px');
-  if(k==='size')document.documentElement.style.setProperty('--tile-size',settings.size+'px');
-  if(k==='gap')document.documentElement.style.setProperty('--grid-gap',settings.gap+'px');
-  updateSettingsUI();if(k==='size'||k==='rows'||k==='cols'||k==='gap'){updateBar();if(k==='size'||k==='rows'||k==='cols')buildGrid()}
-}
+function updateSettingsUI(){$("sizeValue").innerText=settings.size;$("gapValue").innerText=settings.gap;$("rowsValue").innerText=settings.rows;$("colsValue").innerText=settings.cols;$("cornerValue").innerText=settings.corner;$("devicePC").checked=deviceMode==='pc';$("devicePhone").checked=deviceMode==='phone';const s=document.querySelector('input[name="bgmode"][value="select"]'),c=document.querySelector('input[name="bgmode"][value="custom"]');if(s&&c){s.checked=bgMode==='select';c.checked=bgMode==='custom'}$("bgSelect").style.display=bgMode==='select'?'flex':'none';$("bgCustom").style.display=bgMode==='custom'?'flex':'none';$("bgName").innerText=backgrounds[currentBG]??'(none)'}
+function seedSettings(){settings={...getDeviceDefaults(),...settings,device:deviceMode};clampAll();persist();applyVars();updateSettingsUI();updateBar()}
+function changeSetting(k,d){const clamp=(k,v)=>k==='corner'?Math.max(0,v):k==='gap'?Math.max(0,v):Math.max(1,v);settings[k]=clamp(k,+settings[k]||0+d);persist();if(k==='corner')document.documentElement.style.setProperty('--corner-radius',settings.corner+'px');if(k==='size')document.documentElement.style.setProperty('--tile-size',settings.size+'px');if(k==='gap')document.documentElement.style.setProperty('--grid-gap',settings.gap+'px');updateSettingsUI();if(['size','rows','cols','gap'].includes(k)){updateBar();if(['size','rows','cols'].includes(k))buildGrid()}}
 function setBGMode(m){bgMode=m;settings.bgMode=m;persist();updateSettingsUI();applyBackground()}
-function changeBG(step){currentBG+=step;if(currentBG>=backgrounds.length||!backgrounds[currentBG])currentBG=0;if(currentBG<0)currentBG=backgrounds.length-1;settings.bgIndex=currentBG;persist();updateSettingsUI();applyBackground()}
+function changeBG(s){currentBG+=s;if(currentBG>=backgrounds.length||!backgrounds[currentBG])currentBG=0;if(currentBG<0)currentBG=backgrounds.length-1;settings.bgIndex=currentBG;persist();updateSettingsUI();applyBackground()}
 function uploadBG(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=x=>document.body.style.backgroundImage=`url('${x.target.result}')`;r.readAsDataURL(f)}
 function applyBackground(){if(bgMode==='select')document.body.style.backgroundImage=`url('${backgroundBase}/${backgrounds[currentBG]}')`}
-function buildGrid(){
-  const g=$("grid");tiles=[];totalValid=0;g.style.gridTemplateColumns=`repeat(${settings.cols},var(--tile-size))`;updateBar();
-  const f=document.createDocumentFragment(),n=settings.rows*settings.cols;
-  for(let i=0;i<n;i++){const b=document.createElement("button");b.className="grid-button";b.setAttribute("aria-pressed",gridData.includes(i)?"true":"false");
-    const img=document.createElement("img");img.loading="lazy";img.decoding="async";img.style.opacity="0";
-    const c=document.createElement("img");c.src="check.png";const sz=Math.ceil(settings.size*.5);c.className="checkmark";c.style.width=sz+"px";c.style.height=sz+"px";
-    const idx=i,path=`images/${idx+1}.png`;img.src=path;
-    img.onload=()=>{if(!b.dataset.loaded){totalValid++;b.dataset.loaded="1"}img.style.opacity="1";scheduleProgressUpdate()};
-    img.onerror=()=>{b.style.display="none";scheduleProgressUpdate()};
-    if(gridData.includes(idx))b.classList.add("checked");
-    b.onclick=()=>toggleTile(idx);
-    b.appendChild(img);b.appendChild(c);tiles.push({btn:b,img,c,index:idx});f.appendChild(b)}
-  g.replaceChildren(f);scheduleProgressUpdate(true)
-}
-function toggleTile(i){const t=tiles[i];if(!t)return;const p=gridData.indexOf(i);if(p>-1)gridData.splice(p,1);else gridData.push(i);localStorage.setItem("checklist",JSON.stringify(gridData));
-  const chk=gridData.includes(i);t.btn.classList.toggle("checked",chk);t.btn.setAttribute("aria-pressed",chk?"true":"false");scheduleProgressUpdate()}
+function buildGrid(){const g=$("grid");tiles=[];totalValid=0;g.style.gridTemplateColumns=`repeat(${settings.cols},var(--tile-size))`;updateBar();const f=document.createDocumentFragment(),n=settings.rows*settings.cols;for(let i=0;i<n;i++){const b=document.createElement("button");b.className="grid-button";b.setAttribute("aria-pressed",gridData.includes(i)?"true":"false");const img=document.createElement("img");img.loading="lazy";img.decoding="async";img.style.opacity="0";const c=document.createElement("img");c.src="check.png";const sz=Math.ceil(settings.size*.5);c.className="checkmark";c.style.width=sz+"px";c.style.height=sz+"px";const idx=i,path=`images/${idx+1}.png`;img.src=path;img.onload=()=>{if(!b.dataset.loaded){totalValid++;b.dataset.loaded="1"}img.style.opacity="1";scheduleProgressUpdate()};img.onerror=()=>{b.style.display="none";scheduleProgressUpdate()};if(gridData.includes(idx))b.classList.add("checked");b.onclick=()=>toggleTile(idx);b.appendChild(img);b.appendChild(c);tiles.push({btn:b,img,c,index:idx});f.appendChild(b)}g.replaceChildren(f);scheduleProgressUpdate(true)}
+function toggleTile(i){const t=tiles[i];if(!t)return;const p=gridData.indexOf(i);if(p>-1)gridData.splice(p,1);else gridData.push(i);localStorage.setItem("checklist",JSON.stringify(gridData));const chk=gridData.includes(i);t.btn.classList.toggle("checked",chk);t.btn.setAttribute("aria-pressed",chk?"true":"false");scheduleProgressUpdate()}
 function scheduleProgressUpdate(f=false){if(rafProgress&&!f)return;rafProgress=requestAnimationFrame(()=>{updateProgress(totalValid);rafProgress=null})}
 function updateProgress(t){const c=gridData.length,p=t===0?0:Math.round(c/t*100),fill=$("progressFill");fill.style.width=p+"%";fill.textContent=`${c} / ${t}`}
 function resetChecklist(){if(!confirm("Reset all checked items?"))return;localStorage.removeItem("checklist");gridData=[];for(const t of tiles){t.btn.classList.remove("checked");t.btn.setAttribute("aria-pressed","false")}scheduleProgressUpdate(true)}
 function toggleSettings(){const p=$("settingsPopup");p.style.display=p.style.display==="none"?"block":"none"}
 function closeSettings(){$("settingsPopup").style.display="none"}
-async function capturePage(){
-  const btns=[$("screenshotBtn"),$("settingsButton")].filter(Boolean),prev=btns.map(b=>b.style.visibility),restore=()=>btns.forEach((x,i)=>x.style.visibility=prev[i]||'');
-  btns.forEach(b=>b.style.visibility="hidden");await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-  try{const cv=await html2canvas(document.body,{useCORS:true,scrollY:-window.scrollY,backgroundColor:null});
-    if(cv.toBlob)cv.toBlob(b=>{if(!b){restore();return}const a=document.createElement('a'),u=URL.createObjectURL(b),ts=new Date().toISOString().replace(/[:.]/g,'-');a.href=u;a.download=`webpage_${ts}.png`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);restore()},'image/png');
-    else{const url=cv.toDataURL('image/png'),a=document.createElement('a'),ts=new Date().toISOString().replace(/[:.]/g,'-');a.href=url;a.download=`webpage_${ts}.png`;document.body.appendChild(a);a.click();a.remove();restore()}}
-  catch(e){restore();alert('Screenshot failed.')}}
-async function applyDeviceDefaults(){
-  backgroundBase=deviceMode==='phone'?'background_phone':'background_pc';
-  settings={...getDeviceDefaults(),device:deviceMode};persist();applyVars();updateSettingsUI();applyBackground();buildGrid()
-}
+async function capturePage(){const btns=[$("screenshotBtn"),$("settingsButton")].filter(Boolean),prev=btns.map(b=>b.style.visibility),restore=()=>btns.forEach((x,i)=>x.style.visibility=prev[i]||'');btns.forEach(b=>b.style.visibility="hidden");await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));try{const cv=await html2canvas(document.body,{useCORS:true,scrollY:-window.scrollY,backgroundColor:null});if(cv.toBlob)cv.toBlob(b=>{if(!b){restore();return}const a=document.createElement('a'),u=URL.createObjectURL(b),ts=new Date().toISOString().replace(/[:.]/g,'-');a.href=u;a.download=`webpage_${ts}.png`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);restore()},'image/png');else{const url=cv.toDataURL('image/png'),a=document.createElement('a'),ts=new Date().toISOString().replace(/[:.]/g,'-');a.href=url;a.download=`webpage_${ts}.png`;document.body.appendChild(a);a.click();a.remove();restore()}}catch(e){restore();alert('Screenshot failed.')}}
+async function applyDeviceDefaults(){backgroundBase=deviceMode==='phone'?'background_phone':'background_pc';settings={...getDeviceDefaults(),device:deviceMode};persist();applyVars();updateSettingsUI();applyBackground();buildGrid()}
 async function onDeviceChange(mode){if(mode===deviceMode)return;deviceMode=mode;await applyDeviceDefaults()}
-async function init(){
-  backgroundBase=deviceMode==='phone'?'background_phone':'background_pc';
-  seedSettings();applyBackground();buildGrid()
-}
+async function init(){backgroundBase=deviceMode==='phone'?'background_phone':'background_pc';seedSettings();applyBackground();buildGrid()}
 $("settingsButton").onclick=toggleSettings;$("resetChecklistBtn").onclick=resetChecklist;$("reloadDefaultsBtn").onclick=applyDeviceDefaults;$("screenshotBtn").onclick=capturePage;init();
 </script></body></html>
