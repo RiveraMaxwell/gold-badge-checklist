@@ -39,114 +39,75 @@
     }
     .progress-fill {
       position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
+      top: 0; left: 0; height: 100%;
       background: #008000;
-      text-align: center;
-      line-height: 25px;
-      color: white;
-      font-weight: bold;
+      text-align: center; line-height: 25px;
+      color: white; font-weight: bold;
+      transition: width 200ms ease;
+      will-change: width;
     }
-    .button-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .grid {
-      display: grid;
-      gap: 10px;
-      margin-top: 20px;
-      justify-content: center;
-    }
+    .button-row { display: flex; gap: 10px; margin-top: 10px; }
+    .grid { display: grid; gap: 10px; margin-top: 20px; justify-content: center; contain: layout paint; }
     .grid-button {
-      position: relative;
-      background-color: transparent;
-      padding: 0;
-      border: none;
-      cursor: pointer;
-      border-radius: var(--corner-radius, 10px);
-      overflow: hidden;
+      position: relative; background: transparent; padding: 0; border: none; cursor: pointer;
+      border-radius: var(--corner-radius, 10px); overflow: hidden;
+      width: var(--tile-size, 100px); height: var(--tile-size, 100px);
     }
     .grid-button img {
-      display: block;
-      width: 100%;
-      height: auto;
+      display: block; width: 100%; height: 100%; object-fit: cover;
       border-radius: var(--corner-radius, 10px);
+      transition: filter 120ms ease, transform 120ms ease, opacity 120ms ease;
     }
-    .grid-button.checked img {
-      filter: brightness(60%);
-    }
+    .grid-button.checked img { filter: brightness(60%); }
     .checkmark {
-      position: absolute;
-      bottom: 0;
-      right: 0;
+      position: absolute; bottom: 0; right: 0; opacity: 0; transition: opacity 120ms ease;
+      pointer-events: none;
     }
+    .grid-button.checked .checkmark { opacity: 1; }
     .popup-settings {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      padding: 20px;
-      border: 2px solid black;
-      z-index: 100;
-      display: none;
-      max-width: 90vw;
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: white; padding: 20px; border: 2px solid black; z-index: 100; display: none; max-width: 90vw;
     }
-    .popup-settings label {
-      font-weight: bold;
-      display: block;
-      margin-top: 10px;
-    }
-    .popup-settings button {
-      margin: 5px;
+    .popup-settings label { font-weight: bold; display: block; margin-top: 10px; }
+    .popup-settings button { margin: 5px; }
+    @media (prefers-reduced-motion: reduce) {
+      .progress-fill, .grid-button img, .checkmark { transition: none !important; }
     }
   </style>
 </head>
 <body>
   <div class="center-container">
     <h1>Gold Battle Ribbons</h1>
-
     <div class="progress-container">
       <div class="progress-bar" id="progressBar">
         <div class="progress-fill" id="progressFill">0 / 0</div>
       </div>
     </div>
-
     <div class="button-row" id="buttonRow">
-      <!-- Reset moved inside Settings -->
       <button id="settingsButton">Settings</button>
     </div>
-
-    <div id="grid" class="grid"></div>
+    <div id="grid" class="grid" aria-live="polite"></div>
   </div>
 
   <div class="popup-settings" id="settingsPopup">
-    <!-- Defaults/Background controls -->
-    <button id="reloadDefaultsBtn" title="Re-apply values from default.txt">Set to Default Setting</button>
-    <button id="hideButtonsBtn" title="Hide Settings button for 30 seconds">Hide Buttons (30s)</button>
-
+    <button id="reloadDefaultsBtn">Set to Default Setting</button>
+    <button id="hideButtonsBtn">Hide Buttons (30s)</button>
     <label>Image Size:</label>
     <button onclick="changeSetting('size', -10)">&lt;</button>
     <span id="sizeValue"></span>
     <button onclick="changeSetting('size', 10)">&gt;</button>
-
     <label>Rows:</label>
     <button onclick="changeSetting('rows', -1)">&lt;</button>
     <span id="rowsValue"></span>
     <button onclick="changeSetting('rows', 1)">&gt;</button>
-
     <label>Cols:</label>
     <button onclick="changeSetting('cols', -1)">&lt;</button>
     <span id="colsValue"></span>
     <button onclick="changeSetting('cols', 1)">&gt;</button>
-
     <label>Corner Radius:</label>
     <button onclick="changeSetting('corner', -2)">&lt;</button>
     <span id="cornerValue"></span>
     <button onclick="changeSetting('corner', 2)">&gt;</button>
-
     <label>Background:</label>
     <input type="radio" name="bgmode" value="select" onchange="setBGMode('select')"> Select
     <input type="radio" name="bgmode" value="custom" onchange="setBGMode('custom')"> Custom
@@ -159,35 +120,24 @@
     <div id="bgCustom" style="display:none">
       <input type="file" accept="image/*" onchange="uploadBG(event)">
     </div>
-
     <hr>
-    <!-- Reset now inside Settings; no more cancel->hide behavior -->
-    <button id="resetChecklistBtn" title="Clear all checked items">Reset Checklist</button>
+    <button id="resetChecklistBtn">Reset Checklist</button>
     <button onclick="closeSettings()">Close</button>
   </div>
 
   <script>
-    // ---------- Defaults via default.txt ----------
-    const FALLBACK_DEFAULTS = {
-      size: 100,
-      rows: 5,
-      cols: 5,
-      corner: 10,
-      bgMode: 'select',
-      bgIndex: 0
-    };
+    const FALLBACK_DEFAULTS = { size: 100, rows: 5, cols: 5, corner: 10, bgMode: 'select', bgIndex: 0 };
     let DEFAULTS = { ...FALLBACK_DEFAULTS };
-
-    // ---------- State ----------
     let gridData = JSON.parse(localStorage.getItem("checklist") || "[]");
     let settings = JSON.parse(localStorage.getItem("settings") || "{}");
     const backgrounds = ["1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png"];
-    let currentBG = 0;
-    let bgMode = 'select';
+    let currentBG = 0, bgMode = 'select';
+    let tiles = [];
+    let totalValid = 0;
+    let rafProgress = null;
 
     function $(id) { return document.getElementById(id); }
 
-    // Parse key=value lines, ignore comments (# or //)
     function parseDefaultsText(txt) {
       const out = {};
       txt.split(/\r?\n/).forEach(line => {
@@ -206,48 +156,34 @@
       try {
         const res = await fetch('default.txt', { cache: 'no-store' });
         if (!res.ok) throw new Error('default.txt not found');
-        const text = await res.text();
-        const parsed = parseDefaultsText(text);
-
-        // Coerce types & validate
+        const parsed = parseDefaultsText(await res.text());
         const def = { ...FALLBACK_DEFAULTS };
-        if (!isNaN(+parsed.size))   def.size   = Math.max(1, +parsed.size);
-        if (!isNaN(+parsed.rows))   def.rows   = Math.max(1, +parsed.rows);
-        if (!isNaN(+parsed.cols))   def.cols   = Math.max(1, +parsed.cols);
+        if (!isNaN(+parsed.size)) def.size = Math.max(1, +parsed.size);
+        if (!isNaN(+parsed.rows)) def.rows = Math.max(1, +parsed.rows);
+        if (!isNaN(+parsed.cols)) def.cols = Math.max(1, +parsed.cols);
         if (!isNaN(+parsed.corner)) def.corner = Math.max(0, +parsed.corner);
-
         const m = (parsed.bgMode || '').toLowerCase();
         def.bgMode = (m === 'custom' || m === 'select') ? m : FALLBACK_DEFAULTS.bgMode;
-
         const idx = parseInt(parsed.bgIndex, 10);
         def.bgIndex = Number.isInteger(idx) ? Math.max(0, idx) : FALLBACK_DEFAULTS.bgIndex;
-
         DEFAULTS = def;
-      } catch (e) {
-        // use fallback
-        DEFAULTS = { ...FALLBACK_DEFAULTS };
-      }
+      } catch { DEFAULTS = { ...FALLBACK_DEFAULTS }; }
     }
 
     function seedAndNormalizeSettings() {
-      // Merge saved with DEFAULTS (fill missing keys)
       const saved = JSON.parse(localStorage.getItem("settings") || "{}");
       settings = { ...DEFAULTS, ...saved };
-
-      // Normalize
-      settings.size   = Math.max(1, Number(settings.size)   || DEFAULTS.size);
-      settings.rows   = Math.max(1, Number(settings.rows)   || DEFAULTS.rows);
-      settings.cols   = Math.max(1, Number(settings.cols)   || DEFAULTS.cols);
+      settings.size = Math.max(1, Number(settings.size) || DEFAULTS.size);
+      settings.rows = Math.max(1, Number(settings.rows) || DEFAULTS.rows);
+      settings.cols = Math.max(1, Number(settings.cols) || DEFAULTS.cols);
       settings.corner = Math.max(0, Number(settings.corner) || DEFAULTS.corner);
       settings.bgMode = (settings.bgMode === 'custom' || settings.bgMode === 'select') ? settings.bgMode : DEFAULTS.bgMode;
       settings.bgIndex = Number.isInteger(+settings.bgIndex) ? +settings.bgIndex : DEFAULTS.bgIndex;
-
-      currentBG = settings.bgIndex;
-      bgMode = settings.bgMode;
-
+      currentBG = settings.bgIndex; bgMode = settings.bgMode;
       localStorage.setItem("settings", JSON.stringify(settings));
       updateSettingsUI();
       document.documentElement.style.setProperty('--corner-radius', settings.corner + 'px');
+      document.documentElement.style.setProperty('--tile-size', settings.size + 'px');
     }
 
     function updateSettingsUI() {
@@ -256,45 +192,28 @@
       $("colsValue").innerText = settings.cols;
       $("cornerValue").innerText = settings.corner;
       $("bgName").innerText = backgrounds[currentBG] ?? '(none)';
-
       const selectRadio = document.querySelector('input[name="bgmode"][value="select"]');
       const customRadio = document.querySelector('input[name="bgmode"][value="custom"]');
-      if (selectRadio && customRadio) {
-        selectRadio.checked = (bgMode === 'select');
-        customRadio.checked = (bgMode === 'custom');
-      }
-
+      if (selectRadio && customRadio) { selectRadio.checked = (bgMode === 'select'); customRadio.checked = (bgMode === 'custom'); }
       $("bgSelect").style.display = bgMode === 'select' ? 'block' : 'none';
       $("bgCustom").style.display = bgMode === 'custom' ? 'block' : 'none';
     }
 
     function changeSetting(key, delta) {
-      const clamp = (k, v) => {
-        if (k === 'corner') return Math.max(0, v);
-        if (k === 'size' || k === 'rows' || k === 'cols') return Math.max(1, v);
-        return v;
-      };
-      const next = clamp(key, Number(settings[key] || 0) + delta);
-      settings[key] = next;
-
-      if (key === 'corner') {
-        document.documentElement.style.setProperty('--corner-radius', settings.corner + 'px');
-      }
+      const clamp = (k, v) => (k === 'corner' ? Math.max(0, v) : Math.max(1, v));
+      settings[key] = clamp(key, Number(settings[key] || 0) + delta);
+      if (key === 'corner') document.documentElement.style.setProperty('--corner-radius', settings.corner + 'px');
+      if (key === 'size') document.documentElement.style.setProperty('--tile-size', settings.size + 'px');
       localStorage.setItem("settings", JSON.stringify(settings));
       updateSettingsUI();
-      renderGrid();
+      if (key === 'size' || key === 'rows' || key === 'cols') buildGrid();
     }
 
     function setBGMode(mode) {
-      bgMode = mode;
-      settings.bgMode = mode;
-      if (mode === 'select' && (currentBG < 0 || currentBG >= backgrounds.length)) {
-        currentBG = 0;
-        settings.bgIndex = 0;
-      }
+      bgMode = mode; settings.bgMode = mode;
+      if (mode === 'select' && (currentBG < 0 || currentBG >= backgrounds.length)) { currentBG = 0; settings.bgIndex = 0; }
       localStorage.setItem("settings", JSON.stringify(settings));
-      updateSettingsUI();
-      applyBackground();
+      updateSettingsUI(); applyBackground();
     }
 
     function changeBG(step) {
@@ -303,85 +222,80 @@
       if (currentBG < 0) currentBG = backgrounds.length - 1;
       settings.bgIndex = currentBG;
       localStorage.setItem("settings", JSON.stringify(settings));
-      updateSettingsUI();
-      applyBackground();
+      updateSettingsUI(); applyBackground();
     }
 
     function uploadBG(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+      const file = event.target.files[0]; if (!file) return;
       const reader = new FileReader();
       reader.onload = e => document.body.style.backgroundImage = `url('${e.target.result}')`;
       reader.readAsDataURL(file);
     }
 
-    function resetBackground() {
-      if (bgMode === 'custom') {
-        setBGMode('select');
-        currentBG = 0;
-        settings.bgIndex = 0;
-        localStorage.setItem("settings", JSON.stringify(settings));
-        updateSettingsUI();
-        applyBackground();
-      }
-    }
-
     function applyBackground() {
-      if (bgMode === 'select') {
-        document.body.style.backgroundImage = `url('background/${backgrounds[currentBG]}')`;
-      }
+      if (bgMode === 'select') document.body.style.backgroundImage = `url('background/${backgrounds[currentBG]}')`;
     }
 
-    function renderGrid() {
+    function buildGrid() {
       const grid = $("grid");
-      grid.innerHTML = "";
+      tiles = [];
+      totalValid = 0;
+      grid.style.gridTemplateColumns = `repeat(${settings.cols}, var(--tile-size))`;
+      $("progressBar").style.width = (settings.size + 10) * settings.cols + "px";
+      const frag = document.createDocumentFragment();
       const count = settings.rows * settings.cols;
-      grid.style.gridTemplateColumns = `repeat(${settings.cols}, ${settings.size}px)`;
-
-      let validCount = 0;
       for (let i = 0; i < count; i++) {
-        const path = `images/${i + 1}.png`;
-        const img = new Image();
+        const btn = document.createElement("button");
+        btn.className = "grid-button";
+        btn.setAttribute("aria-pressed", gridData.includes(i) ? "true" : "false");
+        const img = document.createElement("img");
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.style.opacity = "0";
+        const checkImg = document.createElement("img");
+        checkImg.src = "check.png";
+        const size = Math.ceil(settings.size * 0.5);
+        checkImg.className = "checkmark";
+        checkImg.style.width = size + "px";
+        checkImg.style.height = size + "px";
+        const index = i;
+        const path = `images/${index + 1}.png`;
         img.src = path;
         img.onload = () => {
-          validCount++;
-          const btn = document.createElement("button");
-          btn.className = "grid-button";
-          btn.style.width = btn.style.height = settings.size + "px";
-
-          const image = document.createElement("img");
-          image.src = path;
-          btn.appendChild(image);
-
-          if (gridData.includes(i)) {
-            btn.classList.add("checked");
-            const checkImg = document.createElement("img");
-            checkImg.src = "check.png";
-            const size = Math.ceil(settings.size * 0.5); // checkmark ~50% of tile
-            checkImg.className = "checkmark";
-            checkImg.style.width = size + "px";
-            checkImg.style.height = size + "px";
-            btn.appendChild(checkImg);
-          }
-
-          btn.onclick = () => {
-            const index = gridData.indexOf(i);
-            if (index > -1) {
-              gridData.splice(index, 1);
-            } else {
-              gridData.push(i);
-            }
-            localStorage.setItem("checklist", JSON.stringify(gridData));
-            renderGrid();
-          };
-
-          grid.appendChild(btn);
-          updateProgress(validCount);
+          if (!btn.dataset.loaded) { totalValid++; btn.dataset.loaded = "1"; }
+          img.style.opacity = "1";
+          scheduleProgressUpdate();
         };
+        img.onerror = () => { btn.style.display = "none"; scheduleProgressUpdate(); };
+        if (gridData.includes(index)) btn.classList.add("checked");
+        btn.onclick = () => toggleTile(index);
+        btn.appendChild(img);
+        btn.appendChild(checkImg);
+        tiles.push({ btn, img, checkImg, index });
+        frag.appendChild(btn);
       }
+      grid.replaceChildren(frag);
+      scheduleProgressUpdate(true);
+    }
 
-      const progressBar = $("progressBar");
-      progressBar.style.width = (settings.size + 10) * settings.cols + "px";
+    function toggleTile(index) {
+      const t = tiles[index];
+      if (!t) return;
+      const pos = gridData.indexOf(index);
+      if (pos > -1) gridData.splice(pos, 1); else gridData.push(index);
+      localStorage.setItem("checklist", JSON.stringify(gridData));
+      const checked = gridData.includes(index);
+      t.btn.classList.toggle("checked", checked);
+      t.btn.setAttribute("aria-pressed", checked ? "true" : "false");
+      scheduleProgressUpdate();
+    }
+
+    function scheduleProgressUpdate(force = false) {
+      if (rafProgress && !force) return;
+      rafProgress = requestAnimationFrame(() => {
+        updateProgress(totalValid);
+        rafProgress = null;
+      });
     }
 
     function updateProgress(total) {
@@ -389,61 +303,52 @@
       const percent = total === 0 ? 0 : Math.round((current / total) * 100);
       const fill = $("progressFill");
       fill.style.width = percent + "%";
-      fill.innerText = `${current} / ${total}`;
+      fill.textContent = `${current} / ${total}`;
     }
 
-    // Reset checklist (now simple confirm; no cancel->hide logic)
     function resetChecklist() {
       if (!confirm("Reset all checked items?")) return;
       localStorage.removeItem("checklist");
       gridData = [];
-      renderGrid();
+      for (const t of tiles) {
+        t.btn.classList.remove("checked");
+        t.btn.setAttribute("aria-pressed", "false");
+      }
+      scheduleProgressUpdate(true);
     }
 
-    // New: hide buttons explicitly for 30s
     function hideButtonsFor(durationMs = 30000) {
       const row = $("buttonRow");
       $("settingsPopup").style.display = "none";
       row.style.display = "none";
-      setTimeout(() => {
-        row.style.display = "flex";
-      }, durationMs);
+      setTimeout(() => { row.style.display = "flex"; }, durationMs);
     }
 
     function toggleSettings() {
       const popup = $("settingsPopup");
       popup.style.display = popup.style.display === "none" ? "block" : "none";
     }
+    function closeSettings() { $("settingsPopup").style.display = "none"; }
 
-    function closeSettings() {
-      $("settingsPopup").style.display = "none";
-    }
-
-    // Apply defaults from file immediately
     async function init() {
       await loadDefaultsFromFile();
       seedAndNormalizeSettings();
       applyBackground();
-      renderGrid();
+      buildGrid();
     }
 
-    // Button hooks
     $("settingsButton").onclick = toggleSettings;
     $("resetChecklistBtn").onclick = resetChecklist;
     $("hideButtonsBtn").onclick = () => hideButtonsFor(30000);
     $("reloadDefaultsBtn").onclick = () => {
-      // Re-apply DEFAULTS from default.txt (already loaded at init)
       settings = { ...DEFAULTS };
       localStorage.setItem("settings", JSON.stringify(settings));
+      currentBG = settings.bgIndex; bgMode = settings.bgMode;
       document.documentElement.style.setProperty('--corner-radius', settings.corner + 'px');
-      currentBG = settings.bgIndex;
-      bgMode = settings.bgMode;
-      updateSettingsUI();
-      applyBackground();
-      renderGrid();
+      document.documentElement.style.setProperty('--tile-size', settings.size + 'px');
+      updateSettingsUI(); applyBackground(); buildGrid();
     };
 
-    // Go!
     init();
   </script>
 </body>
