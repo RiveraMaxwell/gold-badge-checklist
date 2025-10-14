@@ -23,7 +23,7 @@ h1{font-size:48px;color:#fff;text-align:center;text-shadow:-2px -2px 0 #000,2px 
 <div id="grid" class="grid" aria-live="polite"></div></div>
 
 <div class="popup-settings" id="settingsPopup">
-<button id="reloadDefaultsBtn">Set to Default Setting</button><button id="hideButtonsBtn" style="display:none">Hide Buttons (30s)</button>
+<button id="reloadDefaultsBtn">Set to Default Setting</button>
 <label>Image Size:</label><button onclick="changeSetting('size',-10)">&lt;</button><span id="sizeValue"></span><button onclick="changeSetting('size',10)">&gt;</button>
 <label>Rows:</label><button onclick="changeSetting('rows',-1)">&lt;</button><span id="rowsValue"></span><button onclick="changeSetting('rows',1)">&gt;</button>
 <label>Cols:</label><button onclick="changeSetting('cols',-1)">&lt;</button><span id="colsValue"></span><button onclick="changeSetting('cols',1)">&gt;</button>
@@ -52,8 +52,7 @@ function updateProgress(t){const c=gridData.length,p=t===0?0:Math.round(c/t*100)
 function resetChecklist(){if(!confirm("Reset all checked items?"))return;localStorage.removeItem("checklist");gridData=[];for(const t of tiles){t.btn.classList.remove("checked");t.btn.setAttribute("aria-pressed","false")}scheduleProgressUpdate(true)}
 function toggleSettings(){const p=$("settingsPopup");p.style.display=p.style.display==="none"?"block":"none"}
 function closeSettings(){$("settingsPopup").style.display="none"}
-function withButtonsHidden(run){const btns=[...document.querySelectorAll('button')],prev=btns.map(b=>b.style.visibility);btns.forEach(b=>b.style.visibility='hidden');const restore=()=>btns.forEach((b,i)=>b.style.visibility=prev[i]||'');return async()=>{try{await run()}finally{restore()}}}
-async function capturePage(){const wrapped=withButtonsHidden(()=>html2canvas(document.body,{useCORS:true,scrollY:-window.scrollY}).then(cv=>{cv.toBlob(b=>{const a=document.createElement('a'),url=URL.createObjectURL(b),ts=new Date().toISOString().replace(/[:.]/g,'-');a.href=url;a.download=`webpage_${ts}.png`;a.click();URL.revokeObjectURL(url)},'image/png')}));await wrapped()}
+async function capturePage(){const btns=[...document.querySelectorAll("button")],prev=btns.map(b=>b.style.visibility);btns.forEach(b=>b.style.visibility="hidden");await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));const cv=await html2canvas(document.body,{useCORS:true,scrollY:-window.scrollY,backgroundColor:null});cv.toBlob(b=>{const a=document.createElement('a'),u=URL.createObjectURL(b),ts=new Date().toISOString().replace(/[:.]/g,'-');a.href=u;a.download=`webpage_${ts}.png`;a.click();URL.revokeObjectURL(u);btns.forEach((x,i)=>x.style.visibility=prev[i]||'')},'image/png')}
 async function init(){await loadDefaultsFromFile();seedAndNormalizeSettings();applyBackground();buildGrid()}
 $("settingsButton").onclick=toggleSettings;$("resetChecklistBtn").onclick=resetChecklist;$("reloadDefaultsBtn").onclick=()=>{settings={...DEFAULTS};localStorage.setItem("settings",JSON.stringify(settings));currentBG=settings.bgIndex;bgMode=settings.bgMode;document.documentElement.style.setProperty('--corner-radius',settings.corner+'px');document.documentElement.style.setProperty('--tile-size',settings.size+'px');updateSettingsUI();applyBackground();buildGrid()};$("screenshotBtn").onclick=capturePage;init();
 </script></body></html>
