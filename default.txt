@@ -1,5 +1,6 @@
 # Default settings
 size=70
+gap=10
 rows=6
 cols=16
 corner=12
