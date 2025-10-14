@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gold Battle Ribbons</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-size: cover;
+      background-position: center;
+    }
+    .center-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 48px;
+      color: white;
+      text-align: center;
+      text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+      margin: 0;
+    }
+    .progress-container {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+    }
+    .progress-bar {
+      position: relative;
+      height: 25px;
+      background-color: transparent;
+      border: 2px solid black;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: #008000;
+      text-align: center;
+      line-height: 25px;
+      color: white;
+      font-weight: bold;
+    }
+    .button-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    .grid-button {
+      position: relative;
+      background-color: transparent;
+      padding: 0;
+      border: none;
+      cursor: pointer;
+      border-radius: var(--corner-radius, 10px);
+      overflow: hidden;
+    }
+    .grid-button img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: var(--corner-radius, 10px);
+    }
+    .grid-button.checked img {
+      filter: brightness(60%);
+    }
+    .checkmark {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+    }
+    .popup-settings {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border: 2px solid black;
+      z-index: 100;
+      display: none;
+    }
+    .popup-settings label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    .popup-settings button {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="center-container">
+    <h1>Gold Battle Ribbons</h1>
+
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar">
+        <div class="progress-fill" id="progressFill">0 / 0</div>
+      </div>
+    </div>
+
+    <div class="button-row">
+      <button id="resetButton">Reset</button>
+      <button id="settingsButton">Settings</button>
+    </div>
+
+    <div id="grid" class="grid"></div>
+  </div>
+
+  <div class="popup-settings" id="settingsPopup">
+    <button onclick="resetBackground()">Reset Background</button>
+    <label>Image Size:</label>
+    <button onclick="changeSetting('size', -10)">&lt;</button>
+    <span id="sizeValue"></span>
+    <button onclick="changeSetting('size', 10)">&gt;</button>
+
+    <label>Rows:</label>
+    <button onclick="changeSetting('rows', -1)">&lt;</button>
+    <span id="rowsValue"></span>
+    <button onclick="changeSetting('rows', 1)">&gt;</button>
+
+    <label>Cols:</label>
+    <button onclick="changeSetting('cols', -1)">&lt;</button>
+    <span id="colsValue"></span>
+    <button onclick="changeSetting('cols', 1)">&gt;</button>
+
+    <label>Corner Radius:</label>
+    <button onclick="changeSetting('corner', -2)">&lt;</button>
+    <span id="cornerValue"></span>
+    <button onclick="changeSetting('corner', 2)">&gt;</button>
+
+    <label>Background:</label>
+    <input type="radio" name="bgmode" value="select" checked onchange="setBGMode('select')"> Select
+    <input type="radio" name="bgmode" value="custom" onchange="setBGMode('custom')"> Custom
+    <br>
+    <div id="bgSelect">
+      <button onclick="changeBG(-1)">&lt;</button>
+      <span id="bgName"></span>
+      <button onclick="changeBG(1)">&gt;</button>
+    </div>
+    <div id="bgCustom" style="display:none">
+      <input type="file" accept="image/*" onchange="uploadBG(event)">
+    </div>
+    <button onclick="closeSettings()">Close</button>
+  </div>
+
+  <script>
+    let gridData = JSON.parse(localStorage.getItem("checklist") || "[]");
+    let settings = JSON.parse(localStorage.getItem("settings") || "{}");
+    let backgrounds = ["1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png"];
+    let currentBG = settings.bgIndex || 0;
+    let bgMode = settings.bgMode || "select";
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function loadSettings() {
+      settings.size = settings.size || 100;
+      settings.rows = settings.rows || 5;
+      settings.cols = settings.cols || 5;
+      settings.corner = settings.corner || 10;
+      updateSettingsUI();
+      document.documentElement.style.setProperty('--corner-radius', settings.corner + 'px');
+    }
+
+    function updateSettingsUI() {
+      $("sizeValue").innerText = settings.size;
+      $("rowsValue").innerText = settings.rows;
+      $("colsValue").innerText = settings.cols;
+      $("cornerValue").innerText = settings.corner;
+      $("bgName").innerText = backgrounds[currentBG];
+      $("bgSelect").style.display = bgMode === 'select' ? 'block' : 'none';
+      $("bgCustom").style.display = bgMode === 'custom' ? 'block' : 'none';
+    }
+
+    function changeSetting(key, delta) {
+      settings[key] = Math.max(1, settings[key] + delta);
+      updateSettingsUI();
+      localStorage.setItem("settings", JSON.stringify(settings));
+      renderGrid();
+    }
+
+    function setBGMode(mode) {
+      bgMode = mode;
+      settings.bgMode = mode;
+      updateSettingsUI();
+      localStorage.setItem("settings", JSON.stringify(settings));
+      applyBackground();
+    }
+
+    function changeBG(step) {
+      currentBG += step;
+      if (currentBG >= backgrounds.length || !backgrounds[currentBG]) currentBG = 0;
+      if (currentBG < 0) currentBG = backgrounds.length - 1;
+      settings.bgIndex = currentBG;
+      updateSettingsUI();
+      localStorage.setItem("settings", JSON.stringify(settings));
+      applyBackground();
+    }
+
+    function uploadBG(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => document.body.style.backgroundImage = `url('${e.target.result}')`;
+      reader.readAsDataURL(file);
+    }
+
+    function resetBackground() {
+      if (bgMode === 'custom') {
+        bgMode = 'select';
+        settings.bgMode = 'select';
+        currentBG = 0;
+        settings.bgIndex = 0;
+        updateSettingsUI();
+        localStorage.setItem("settings", JSON.stringify(settings));
+        applyBackground();
+      }
+    }
+
+    function applyBackground() {
+      if (bgMode === 'select') {
+        document.body.style.backgroundImage = `url('background/${backgrounds[currentBG]}')`;
+      }
+    }
+
+    function renderGrid() {
+      const grid = $("grid");
+      grid.innerHTML = "";
+      const count = settings.rows * settings.cols;
+      grid.style.gridTemplateColumns = `repeat(${settings.cols}, ${settings.size}px)`;
+
+      let validCount = 0;
+      for (let i = 0; i < count; i++) {
+        const path = `images/${i + 1}.png`;
+        const img = new Image();
+        img.src = path;
+        img.onload = () => {
+          validCount++;
+          const btn = document.createElement("button");
+          btn.className = "grid-button";
+          btn.style.width = btn.style.height = settings.size + "px";
+
+          const image = document.createElement("img");
+          image.src = path;
+          btn.appendChild(image);
+
+          if (gridData.includes(i)) {
+            btn.classList.add("checked");
+            const checkImg = document.createElement("img");
+            checkImg.src = "check.png";
+
+            const size = Math.ceil(settings.size * 0.5);
+            checkImg.className = "checkmark";
+            checkImg.style.width = size + "px";
+            checkImg.style.height = size + "px";
+
+            btn.appendChild(checkImg);
+          }
+
+          btn.onclick = () => {
+            const index = gridData.indexOf(i);
+            if (index > -1) {
+              gridData.splice(index, 1);
+            } else {
+              gridData.push(i);
+            }
+            localStorage.setItem("checklist", JSON.stringify(gridData));
+            renderGrid();
+          };
+
+          grid.appendChild(btn);
+          updateProgress(validCount);
+        };
+      }
+
+      const progressBar = $("progressBar");
+      progressBar.style.width = (settings.size + 10) * settings.cols + "px";
+    }
+
+    function updateProgress(total) {
+      const current = gridData.length;
+      const percent = total === 0 ? 0 : Math.round((current / total) * 100);
+      const fill = $("progressFill");
+      fill.style.width = percent + "%";
+      fill.innerText = `${current} / ${total}`;
+    }
+
+    function resetChecklist() {
+      if (!confirm("Are you sure you want to reset?")) {
+        $("resetButton").style.display = "none";
+        $("settingsButton").style.display = "none";
+        setTimeout(() => {
+          $("resetButton").style.display = "inline";
+          $("settingsButton").style.display = "inline";
+        }, 30000);
+        return;
+      }
+      localStorage.removeItem("checklist");
+      gridData = [];
+      renderGrid();
+    }
+
+    function toggleSettings() {
+      const popup = $("settingsPopup");
+      popup.style.display = popup.style.display === "none" ? "block" : "none";
+    }
+
+    function closeSettings() {
+      $("settingsPopup").style.display = "none";
+    }
+
+    $("resetButton").onclick = resetChecklist;
+    $("settingsButton").onclick = toggleSettings;
+
+    loadSettings();
+    applyBackground();
+    renderGrid();
+  </script>
+</body>
+</html>
